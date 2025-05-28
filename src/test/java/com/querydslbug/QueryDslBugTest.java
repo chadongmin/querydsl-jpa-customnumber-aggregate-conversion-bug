@@ -95,7 +95,7 @@ public class QueryDslBugTest {
     @Test
     void queries_with_NumberExpression_fails() {
         var rows = new JPAQuery<>(em)
-                .select(myEntity.myCustomNumber.sum())
+                .select(myEntity.myCustomNumber.sumAggregate())
                 .from(myEntity)
                 .fetch();
 
@@ -111,7 +111,7 @@ public class QueryDslBugTest {
     @Test
     void projection_queries_with_sum_fail() {
         var rows = new JPAQuery<>(em)
-                .select(new QMyProjection(myEntity.type, myEntity.myCustomNumber.sum()))
+                .select(new QMyProjection(myEntity.type, myEntity.myCustomNumber.sumAggregate()))
                 .from(myEntity)
                 .groupBy(myEntity.type)
                 .fetch();
@@ -129,7 +129,7 @@ public class QueryDslBugTest {
     @Test
     void type_wrapper_projection_with_sum_should_convert_result_to_custom_type() {
         // when
-        NumberExpression<BigDecimal> sumExpr = myEntity.myCustomNumber.sum().castToNum(BigDecimal.class);
+        NumberExpression<BigDecimal> sumExpr = myEntity.myCustomNumber.sumAggregate().castToNum(BigDecimal.class);
 
         MyCustomNumber result = new JPAQuery<>(em)
                 .select(new TypeWrapper<>(
