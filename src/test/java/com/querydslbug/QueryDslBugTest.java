@@ -1,21 +1,21 @@
 package com.querydslbug;
 
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydslbug.entity.MyCustomNumber;
 import com.querydslbug.entity.MyEntity;
 import com.querydslbug.entity.MyProjection;
 import com.querydslbug.entity.QMyProjection;
+import com.querydslbug.utils.TypeWrapper;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
+
+import java.math.BigDecimal;
 
 import static com.querydslbug.entity.QMyEntity.myEntity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -124,5 +124,22 @@ public class QueryDslBugTest {
                         new MyProjection("aaa", new MyCustomNumber("333")),
                         new MyProjection("zzz", new MyCustomNumber("999"))
                 );
+    }
+
+    @Test
+    void type_wrapper_projection_with_sum_should_convert_result_to_custom_type() {
+        // when
+        NumberExpression<BigDecimal> sumExpr = myEntity.myCustomNumber.sum().castToNum(BigDecimal.class);
+
+        MyCustomNumber result = new JPAQuery<>(em)
+                .select(new TypeWrapper<>(
+                        sumExpr,
+                        MyCustomNumber.class,
+                        (BigDecimal val) -> new MyCustomNumber(val.toString())))
+                .from(myEntity)
+                .fetchOne();
+
+        // then
+        assertThat(result).isEqualTo(new MyCustomNumber("1332.0"));
     }
 }
