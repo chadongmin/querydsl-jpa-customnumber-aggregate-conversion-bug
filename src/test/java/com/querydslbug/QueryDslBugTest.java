@@ -1,21 +1,21 @@
 package com.querydslbug;
 
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydslbug.entity.MyCustomNumber;
 import com.querydslbug.entity.MyEntity;
 import com.querydslbug.entity.MyProjection;
 import com.querydslbug.entity.QMyProjection;
+import com.querydslbug.utils.TypeWrapper;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
+
+import java.math.BigDecimal;
 
 import static com.querydslbug.entity.QMyEntity.myEntity;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -95,7 +95,7 @@ public class QueryDslBugTest {
     @Test
     void queries_with_NumberExpression_fails() {
         var rows = new JPAQuery<>(em)
-                .select(myEntity.myCustomNumber.sum())
+                .select(myEntity.myCustomNumber.sumAggregate())
                 .from(myEntity)
                 .fetch();
 
@@ -111,7 +111,7 @@ public class QueryDslBugTest {
     @Test
     void projection_queries_with_sum_fail() {
         var rows = new JPAQuery<>(em)
-                .select(new QMyProjection(myEntity.type, myEntity.myCustomNumber.sum()))
+                .select(new QMyProjection(myEntity.type, myEntity.myCustomNumber.sumAggregate()))
                 .from(myEntity)
                 .groupBy(myEntity.type)
                 .fetch();
